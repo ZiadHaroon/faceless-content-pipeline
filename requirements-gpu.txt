@@ -1,0 +1,13 @@
+# GPU image generation dependencies (RTX 4060 / CUDA 12.1)
+# Install with:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+#   pip install -r requirements-gpu.txt
+#
+# Model: FLUX.1-schnell (black-forest-labs/FLUX.1-schnell)
+# First run downloads ~23GB to your HuggingFace cache (~/.cache/huggingface/)
+
+diffusers>=0.30.0
+transformers>=4.44.0
+accelerate>=0.33.0
+sentencepiece>=0.2.0
+protobuf>=4.25.0
