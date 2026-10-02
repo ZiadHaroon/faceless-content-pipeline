@@ -6,13 +6,27 @@ from pathlib import Path
 
 class Database:
     def __init__(self, db_path: str | Path) -> None:
-        self._path = Path(db_path)
-        self._path.parent.mkdir(parents=True, exist_ok=True)
+        self._path = str(db_path)
+        self._shared_conn: sqlite3.Connection | None = None
+
+        if self._path != ":memory:":
+            Path(self._path).parent.mkdir(parents=True, exist_ok=True)
 
     def connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(str(self._path))
+        # In-memory databases must reuse one connection — each new connection
+        # gets a completely separate empty database.
+        if self._path == ":memory:":
+            if self._shared_conn is None:
+                self._shared_conn = self._make_conn()
+            return self._shared_conn
+
+        return self._make_conn()
+
+    def _make_conn(self) -> sqlite3.Connection:
+        conn = sqlite3.connect(self._path, check_same_thread=False)
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
+        if self._path != ":memory:":
+            conn.execute("PRAGMA journal_mode=WAL")
         return conn
 
     def migrate(self) -> None:
