@@ -1,0 +1,26 @@
+<div id="post-url-{{ video_id }}-{{ platform.value }}" style="margin-bottom:8px">
+  <div class="text-muted text-sm" style="margin-bottom:4px">{{ platform.value | capitalize }}</div>
+  {% if url %}
+    <div style="display:flex;gap:8px;align-items:center">
+      <a href="{{ url }}" target="_blank" class="text-sm">{{ url[:50] }}{% if url|length > 50 %}…{% endif %}</a>
+      <span class="text-muted text-sm">·</span>
+      <form style="display:inline"
+            hx-post="/pipeline/{{ video_id }}/set-post-url"
+            hx-target="#post-url-{{ video_id }}-{{ platform.value }}"
+            hx-swap="outerHTML">
+        <input type="hidden" name="platform" value="{{ platform.value }}">
+        <input type="text" name="url" placeholder="Update URL..." style="font-size:12px;padding:3px 6px;width:180px">
+        <button type="submit" class="btn btn-sm">Update</button>
+      </form>
+    </div>
+  {% else %}
+    <form style="display:flex;gap:6px"
+          hx-post="/pipeline/{{ video_id }}/set-post-url"
+          hx-target="#post-url-{{ video_id }}-{{ platform.value }}"
+          hx-swap="outerHTML">
+      <input type="hidden" name="platform" value="{{ platform.value }}">
+      <input type="text" name="url" placeholder="https://..." style="font-size:12px;padding:3px 6px;flex:1">
+      <button type="submit" class="btn btn-sm">Save</button>
+    </form>
+  {% endif %}
+</div>

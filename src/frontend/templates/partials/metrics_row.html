@@ -1,0 +1,28 @@
+<div id="metrics-{{ video_id }}-{{ platform.value }}" style="margin-bottom:12px">
+  <div class="panel-section-title" style="margin-bottom:8px">{{ platform.value | capitalize }}</div>
+  <form class="metrics-grid"
+        hx-post="/pipeline/{{ video_id }}/update-metrics"
+        hx-target="#metrics-{{ video_id }}-{{ platform.value }}"
+        hx-swap="outerHTML">
+    <input type="hidden" name="platform" value="{{ platform.value }}">
+    <div class="form-group">
+      <label>Views</label>
+      <input type="number" name="views" value="{{ m.views }}" min="0">
+    </div>
+    <div class="form-group">
+      <label>Likes</label>
+      <input type="number" name="likes" value="{{ m.likes }}" min="0">
+    </div>
+    <div class="form-group">
+      <label>Comments</label>
+      <input type="number" name="comments" value="{{ m.comments }}" min="0">
+    </div>
+    <div class="form-group">
+      <label>Shares</label>
+      <input type="number" name="shares" value="{{ m.shares }}" min="0">
+    </div>
+    <div style="display:flex;align-items:flex-end">
+      <button type="submit" class="btn btn-sm">Save <span class="htmx-indicator spinner"></span></button>
+    </div>
+  </form>
+</div>

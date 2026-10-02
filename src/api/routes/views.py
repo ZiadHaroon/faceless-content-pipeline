@@ -5,7 +5,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from src.api.dependencies import get_pipeline_service, get_video_repo
+from src.api.dependencies import (
+    get_pipeline_service,
+    get_prompt_repo,
+    get_topic_repo,
+    get_video_repo,
+)
 from src.api.templating import templates
 from src.domain.models import (
     AudienceLevel,
@@ -13,9 +18,13 @@ from src.domain.models import (
     HookStyle,
     Platform,
     PipelineStage,
+    PlatformMetrics,
     ScriptRequest,
+    TopicTag,
 )
 from src.infrastructure.tts_client import VOICES
+from src.repositories.prompt import SQLitePromptRepository
+from src.repositories.topic import SQLiteTopicRepository
 from src.repositories.video import SQLiteVideoRepository
 from src.services.pipeline import PipelineService
 
@@ -293,3 +302,226 @@ def publish_html(
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
+
+
+@router.post("/pipeline/{video_id}/set-post-url", response_class=HTMLResponse)
+def set_post_url_html(
+    request: Request,
+    video_id: int,
+    platform: str = Form(...),
+    url: str = Form(...),
+    repo: SQLiteVideoRepository = Depends(get_video_repo),
+):
+    video = repo.get_by_id(video_id)
+    if video is None:
+        return HTMLResponse("")
+    p = Platform(platform)
+    updated_urls = dict(video.post_urls)
+    updated_urls[p] = url.strip()
+    video = video.model_copy(update={"post_urls": updated_urls})
+    repo.update(video)
+    url_val = updated_urls[p]
+    return templates.TemplateResponse("partials/post_url_entry.html", {
+        "request": request,
+        "video_id": video_id,
+        "platform": p,
+        "url": url_val,
+    })
+
+
+@router.post("/pipeline/{video_id}/update-metrics", response_class=HTMLResponse)
+def update_metrics_html(
+    request: Request,
+    video_id: int,
+    platform: str = Form(...),
+    views: int = Form(0),
+    likes: int = Form(0),
+    comments: int = Form(0),
+    shares: int = Form(0),
+    repo: SQLiteVideoRepository = Depends(get_video_repo),
+):
+    video = repo.get_by_id(video_id)
+    if video is None:
+        return HTMLResponse("")
+    p = Platform(platform)
+    updated_perf = dict(video.performance)
+    updated_perf[p] = PlatformMetrics(views=views, likes=likes, comments=comments, shares=shares)
+    video = video.model_copy(update={"performance": updated_perf})
+    repo.update(video)
+    m = updated_perf[p]
+    return templates.TemplateResponse("partials/metrics_row.html", {
+        "request": request,
+        "video_id": video_id,
+        "platform": p,
+        "m": m,
+    })
+
+
+# ── Topics ────────────────────────────────────────────────────────────────
+
+
+@router.get("/topics", response_class=HTMLResponse)
+def topics_page(
+    request: Request,
+    repo: SQLiteTopicRepository = Depends(get_topic_repo),
+):
+    topics = repo.get_all()
+    return templates.TemplateResponse("topics.html", {
+        "request": request,
+        "active_nav": "topics",
+        "topics": topics,
+        "tags": list(TopicTag),
+    })
+
+
+@router.get("/topics/list", response_class=HTMLResponse)
+def topic_list_partial(
+    request: Request,
+    unused_only: bool = False,
+    repo: SQLiteTopicRepository = Depends(get_topic_repo),
+):
+    topics = repo.get_all(unused_only=unused_only)
+    return templates.TemplateResponse("partials/topic_list.html", {
+        "request": request,
+        "topics": topics,
+    })
+
+
+@router.post("/topics", response_class=HTMLResponse)
+def create_topic_html(
+    request: Request,
+    topic: str = Form(...),
+    tag: str = Form("other"),
+    repo: SQLiteTopicRepository = Depends(get_topic_repo),
+):
+    new_topic = repo.create(topic=topic, tag=TopicTag(tag))
+    return templates.TemplateResponse("partials/topic_row.html", {
+        "request": request,
+        "topic": new_topic,
+    })
+
+
+@router.post("/topics/{topic_id}/mark-used", response_class=HTMLResponse)
+def mark_topic_used_html(
+    request: Request,
+    topic_id: int,
+    repo: SQLiteTopicRepository = Depends(get_topic_repo),
+):
+    repo.mark_used(topic_id)
+    topic = repo.get_by_id(topic_id)
+    return templates.TemplateResponse("partials/topic_row.html", {
+        "request": request,
+        "topic": topic,
+    })
+
+
+@router.delete("/topics/{topic_id}", response_class=HTMLResponse)
+def delete_topic_html(
+    topic_id: int,
+    repo: SQLiteTopicRepository = Depends(get_topic_repo),
+):
+    repo.delete(topic_id)
+    return HTMLResponse("")
+
+
+# ── Prompts ───────────────────────────────────────────────────────────────
+
+
+@router.get("/prompts", response_class=HTMLResponse)
+def prompts_page(
+    request: Request,
+    repo: SQLitePromptRepository = Depends(get_prompt_repo),
+):
+    prompts = repo.get_all()
+    return templates.TemplateResponse("prompts.html", {
+        "request": request,
+        "active_nav": "prompts",
+        "prompts": prompts,
+    })
+
+
+@router.get("/prompts/list", response_class=HTMLResponse)
+def prompt_list_partial(
+    request: Request,
+    repo: SQLitePromptRepository = Depends(get_prompt_repo),
+):
+    prompts = repo.get_all()
+    return templates.TemplateResponse("partials/prompt_list.html", {
+        "request": request,
+        "prompts": prompts,
+    })
+
+
+@router.post("/prompts", response_class=HTMLResponse)
+def create_prompt_html(
+    request: Request,
+    name: str = Form(...),
+    template: str = Form(...),
+    repo: SQLitePromptRepository = Depends(get_prompt_repo),
+):
+    prompt = repo.create(name=name, template=template)
+    return templates.TemplateResponse("partials/prompt_row.html", {
+        "request": request,
+        "prompt": prompt,
+    })
+
+
+@router.delete("/prompts/{prompt_id}", response_class=HTMLResponse)
+def delete_prompt_html(
+    prompt_id: int,
+    repo: SQLitePromptRepository = Depends(get_prompt_repo),
+):
+    repo.delete(prompt_id)
+    return HTMLResponse("")
+
+
+# ── Batch / Calendar / Performance ───────────────────────────────────────
+
+
+@router.get("/batch", response_class=HTMLResponse)
+def batch_page(
+    request: Request,
+    repo: SQLiteVideoRepository = Depends(get_video_repo),
+):
+    videos = repo.get_all()
+    active_stages = [s for s in PipelineStage if s != PipelineStage.published]
+    videos_by_stage: dict[str, list] = {s.value: [] for s in active_stages}
+    for v in videos:
+        if v.stage != PipelineStage.published:
+            videos_by_stage[v.stage.value].append(v)
+    stage_counts = {s: len(videos_by_stage[s.value]) for s in active_stages}
+    total = sum(stage_counts.values())
+    return templates.TemplateResponse("batch.html", {
+        "request": request,
+        "active_nav": "batch",
+        "videos_by_stage": videos_by_stage,
+        "active_stages": [s.value for s in active_stages],
+        "stage_counts": {s.value: c for s, c in stage_counts.items()},
+        "total": total,
+    })
+
+
+@router.get("/calendar", response_class=HTMLResponse)
+def calendar_page(
+    request: Request,
+    repo: SQLiteVideoRepository = Depends(get_video_repo),
+):
+    videos = repo.get_all(stage=PipelineStage.published)
+    return templates.TemplateResponse("calendar.html", {
+        "request": request,
+        "active_nav": "calendar",
+        "videos": videos,
+    })
+
+
+@router.get("/performance", response_class=HTMLResponse)
+def performance_page(
+    request: Request,
+    repo: SQLiteVideoRepository = Depends(get_video_repo),
+):
+    videos = repo.get_all(stage=PipelineStage.published)
+    return templates.TemplateResponse("performance.html", {
+        "request": request,
+        "active_nav": "performance",
+        "videos": videos,
+    })
