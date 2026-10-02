@@ -30,7 +30,7 @@ v2 replaces Streamlit with FastAPI + HTMX, GPU image generation with Pexels stoc
 | 4 | ScriptService + unit tests | ✅ Done |
 | 5 | AudioService (per-slide) + unit tests | ✅ Done |
 | 6 | ImageService (Pexels + overlay) + unit tests | ✅ Done |
-| 7 | AssemblyService (concat + captions) + unit tests | Pending |
+| 7 | AssemblyService (concat + captions) + unit tests | ✅ Done |
 | 8 | FastAPI routes | Pending |
 | 9–10 | HTMX frontend | Pending |
 | 11 | Karaoke caption timing | Pending |
