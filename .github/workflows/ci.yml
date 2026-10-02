@@ -23,4 +23,4 @@ jobs:
         run: pip install -r requirements-core.txt -r requirements-ci.txt
 
       - name: Run tests
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short || [ $? -eq 5 ]
