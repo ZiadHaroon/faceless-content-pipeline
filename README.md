@@ -25,9 +25,9 @@ v2 replaces Streamlit with FastAPI + HTMX, GPU image generation with Pexels stoc
 | Phase | Deliverable | Status |
 |---|---|---|
 | 1 | Domain models + repository interfaces | ✅ Done |
-| 2 | Infrastructure layer (DB, Ollama, Pexels, TTS clients) | Pending |
-| 3 | Repository implementations + integration tests | Pending |
-| 4 | ScriptService + unit tests | Pending |
+| 2 | Infrastructure layer (DB, Ollama, Pexels, TTS clients) | ✅ Done |
+| 3 | Repository implementations + integration tests | ✅ Done |
+| 4 | ScriptService + unit tests | ✅ Done |
 | 5 | AudioService (per-slide) + unit tests | Pending |
 | 6 | ImageService (Pexels + overlay) + unit tests | Pending |
 | 7 | AssemblyService (concat + captions) + unit tests | Pending |
