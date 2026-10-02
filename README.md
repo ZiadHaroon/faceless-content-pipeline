@@ -1,8 +1,10 @@
 # Faceless Content Pipeline
 
-A local Streamlit dashboard for producing faceless short-form explainer videos (YouTube Shorts, TikTok, Instagram Reels, Facebook Reels). The human reviews and approves at each stage — AI handles script, voiceover, and images.
+A local tool for producing faceless short-form explainer videos (YouTube Shorts, TikTok, Instagram Reels, Facebook Reels). The human reviews and approves at each stage — AI handles script, voiceover, and images.
 
 **Human time target: ~8–10 minutes per video, done in weekly batches.**
+
+> **Status:** v1 (Streamlit) is functional. v2 migration is in progress — see [v2-spec.md](v2-spec.md) for the full plan.
 
 ---
 
@@ -16,7 +18,29 @@ Nothing advances without an explicit approval click. The app tracks every video 
 
 ---
 
+## v2 Migration Progress
+
+v2 replaces Streamlit with FastAPI + HTMX, GPU image generation with Pexels stock photos, and adds per-slide audio, karaoke captions, and a clean layered architecture.
+
+| Phase | Deliverable | Status |
+|---|---|---|
+| 1 | Domain models + repository interfaces | ✅ Done |
+| 2 | Infrastructure layer (DB, Ollama, Pexels, TTS clients) | Pending |
+| 3 | Repository implementations + integration tests | Pending |
+| 4 | ScriptService + unit tests | Pending |
+| 5 | AudioService (per-slide) + unit tests | Pending |
+| 6 | ImageService (Pexels + overlay) + unit tests | Pending |
+| 7 | AssemblyService (concat + captions) + unit tests | Pending |
+| 8 | FastAPI routes | Pending |
+| 9–10 | HTMX frontend | Pending |
+| 11 | Karaoke caption timing | Pending |
+| 12 | Platform export presets | Pending |
+
+---
+
 ## Stack
+
+### v1 (current, running)
 
 | Layer | Tool |
 |---|---|
@@ -27,11 +51,20 @@ Nothing advances without an explicit approval click. The app tracks every video 
 | Image generation | FLUX Q4 GGUF via GPU |
 | Video assembly | MoviePy |
 
-All AI runs locally — no API keys required for core functionality.
+### v2 (in progress)
+
+| Layer | Tool |
+|---|---|
+| UI | FastAPI + HTMX + Jinja2 |
+| Database | SQLite (unchanged) |
+| Script generation | Ollama (unchanged) |
+| Voiceover | Kokoro TTS — per-slide WAV output |
+| Images | Pexels API + PIL branded overlay |
+| Video assembly | MoviePy + ffmpeg (caption burn-in) |
 
 ---
 
-## Setup
+## Setup (v1)
 
 **1. Clone and create a virtual environment**
 
@@ -46,12 +79,6 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 
 ```bash
 pip install -r requirements.txt
-```
-
-For GPU image generation (requires NVIDIA GPU):
-
-```bash
-pip install -r requirements-gpu.txt
 ```
 
 **3. Set up Ollama**
@@ -81,16 +108,21 @@ Everything has a manual fallback if local AI isn't available:
 
 - **No Ollama** — copy the prompt from the app, paste into Claude.ai or ChatGPT, paste the JSON back.
 - **No Kokoro TTS** — upload an MP3/WAV from ElevenLabs via the file uploader.
-- **No GPU** — generate images in Gemini and upload per slide.
+- **No GPU** — generate images via Pexels (v2) or Gemini and upload per slide.
 
 ---
 
 ## Environment variables
 
-Copy `.env.example` to `.env` and fill in any keys you want to use:
-
 ```bash
-cp .env.example .env
+# v1 — no keys required for core functionality
+
+# v2 additions
+PEXELS_API_KEY=your_key_here
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_DEFAULT_MODEL=llama3.1:8b
+TTS_DEFAULT_VOICE=af_heart
+CAPTION_OVERLAY_COLOR=#1a1a2e
 ```
 
 ---
@@ -98,6 +130,7 @@ cp .env.example .env
 ## Project structure
 
 ```
+# v1 (active)
 app.py               # Streamlit UI — all tabs and stage panels
 db.py                # SQLite layer — schema, seed data, CRUD
 script_generator.py  # Ollama integration — prompt, generation, JSON parsing
@@ -105,7 +138,22 @@ tts_engine.py        # Kokoro TTS — voice selection, WAV output
 image_generator.py   # FLUX GPU image generation
 video_builder.py     # MoviePy assembly — images + audio → MP4
 cli.py               # Headless CLI entry point
-content-pipeline-spec.md  # Original build spec
+
+# v2 (in progress)
+src/
+  domain/models.py         # Pydantic v2 domain models
+  repositories/base.py     # Abstract repository interfaces
+  services/                # Business logic (phases 4–7)
+  infrastructure/          # External system wrappers (phase 2)
+  api/                     # FastAPI routes (phase 8)
+  frontend/                # HTMX + Jinja2 templates (phases 9–10)
+tests/
+  unit/                    # Service unit tests
+  integration/             # Repository integration tests
+
+# Specs
+v2-spec.md                 # Full v2 architecture and feature decisions
+content-pipeline-spec.md   # Original v1 build spec
 ```
 
 ---
