@@ -25,6 +25,12 @@ class PexelsClient:
         self._session = requests.Session()
         self._session.headers.update({"Authorization": api_key})
 
+    def get_photo(self, photo_id: int) -> PexelsPhoto:
+        """Fetch a single photo by ID."""
+        r = self._session.get(f"{self._BASE}/photos/{photo_id}", timeout=10)
+        r.raise_for_status()
+        return PexelsPhoto(r.json())
+
     def search(self, query: str, per_page: int = 5, orientation: str = "portrait") -> list[PexelsPhoto]:
         """Search Pexels and return up to per_page results."""
         r = self._session.get(
