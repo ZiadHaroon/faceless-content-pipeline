@@ -15,6 +15,14 @@ CAPTION_BOX_BORDER = 10
 # How many words to show at once in karaoke mode
 WORDS_PER_GROUP = 3
 
+# Karaoke timing weights
+_PUNCTUATION_WEIGHT = 1.15      # words ending in , or . get +15% duration
+_FUNCTION_WORD_WEIGHT = 0.90    # short function words get -10% duration
+_FUNCTION_WORDS = frozenset({
+    "a", "an", "the", "is", "are", "was", "were", "be",
+    "to", "of", "in", "it", "at", "as", "or", "on",
+})
+
 
 class AssemblyService:
     def __init__(self, output_dir: Path, fps: int = FPS) -> None:
@@ -70,6 +78,50 @@ class AssemblyService:
                 )
 
         return ",".join(filters)
+
+    def compute_word_timings(
+        self, narration: str, audio_duration_seconds: float
+    ) -> list[WordTiming]:
+        """
+        Proportional timing algorithm for karaoke captions.
+
+        Each word gets a share of ``audio_duration_seconds`` proportional to its
+        character length (punctuation stripped for the base count).  Two rhythm
+        adjustments are then applied:
+
+        - Words ending in ``,`` or ``.`` → +15 % (pause after punctuation).
+        - Short function words (``a``, ``the``, ``is``, …) → −10 %.
+
+        Returns an empty list when ``narration`` is blank or ``audio_duration_seconds``
+        is non-positive.
+        """
+        words = narration.split()
+        if not words or audio_duration_seconds <= 0:
+            return []
+
+        weights: list[float] = []
+        for word in words:
+            clean = word.strip(".,!?;:")
+            w = float(max(len(clean), 1))
+            if word and word[-1] in (",", "."):
+                w *= _PUNCTUATION_WEIGHT
+            if clean.lower() in _FUNCTION_WORDS:
+                w *= _FUNCTION_WORD_WEIGHT
+            weights.append(w)
+
+        total = sum(weights)
+        timings: list[WordTiming] = []
+        cursor = 0.0
+        for word, weight in zip(words, weights):
+            duration = (weight / total) * audio_duration_seconds
+            timings.append(WordTiming(
+                word=word,
+                start_seconds=round(cursor, 4),
+                end_seconds=round(cursor + duration, 4),
+            ))
+            cursor += duration
+
+        return timings
 
     # ── Assembly — MoviePy + ffmpeg, lazy imports, manual-tested ─────────────
 

@@ -161,3 +161,100 @@ def test_build_caption_filter_skips_slides_without_timings(tmp_path):
     result = service.build_caption_filter(slides, tail=0.0)
     # Only one drawtext block — from slide 2
     assert result.count("drawtext") == 1
+
+
+# ── compute_word_timings tests ────────────────────────────────────────────────
+
+
+def test_word_timings_empty_narration_returns_empty(tmp_path):
+    service = make_service(tmp_path)
+    assert service.compute_word_timings("", 5.0) == []
+
+
+def test_word_timings_zero_duration_returns_empty(tmp_path):
+    service = make_service(tmp_path)
+    assert service.compute_word_timings("hello world", 0.0) == []
+
+
+def test_word_timings_negative_duration_returns_empty(tmp_path):
+    service = make_service(tmp_path)
+    assert service.compute_word_timings("hello world", -1.0) == []
+
+
+def test_word_timings_count_matches_word_count(tmp_path):
+    service = make_service(tmp_path)
+    timings = service.compute_word_timings("your phone lies to you", 5.0)
+    assert len(timings) == 5
+
+
+def test_word_timings_first_word_starts_at_zero(tmp_path):
+    service = make_service(tmp_path)
+    timings = service.compute_word_timings("hello world", 4.0)
+    assert timings[0].start_seconds == pytest.approx(0.0)
+
+
+def test_word_timings_total_duration_matches_audio(tmp_path):
+    service = make_service(tmp_path)
+    audio_duration = 7.3
+    timings = service.compute_word_timings("quantum computing changes everything now", audio_duration)
+    total = timings[-1].end_seconds - timings[0].start_seconds
+    assert total == pytest.approx(audio_duration, rel=1e-4)
+
+
+def test_word_timings_contiguous(tmp_path):
+    """Each word's start_seconds equals the previous word's end_seconds."""
+    service = make_service(tmp_path)
+    timings = service.compute_word_timings("your phone lies to you daily", 6.0)
+    for i in range(1, len(timings)):
+        assert timings[i].start_seconds == pytest.approx(timings[i - 1].end_seconds, rel=1e-4)
+
+
+def test_word_timings_single_word_spans_full_duration(tmp_path):
+    service = make_service(tmp_path)
+    timings = service.compute_word_timings("quantum", 3.5)
+    assert timings[0].start_seconds == pytest.approx(0.0)
+    assert timings[0].end_seconds == pytest.approx(3.5)
+
+
+def test_word_timings_longer_word_gets_more_time(tmp_path):
+    """'quantum' (7 chars) should get more time than 'a' (1 char)."""
+    service = make_service(tmp_path)
+    timings = service.compute_word_timings("quantum a", 4.0)
+    quantum_dur = timings[0].end_seconds - timings[0].start_seconds
+    a_dur = timings[1].end_seconds - timings[1].start_seconds
+    assert quantum_dur > a_dur
+
+
+def test_word_timings_punctuated_word_gets_more_time_than_plain(tmp_path):
+    """'battery.' should be longer than 'battery' given equal char lengths."""
+    service = make_service(tmp_path)
+    # Two identical words side by side — the punctuated one should be longer
+    timings_plain = service.compute_word_timings("battery battery", 4.0)
+    timings_punct = service.compute_word_timings("battery. battery", 4.0)
+    plain_first = timings_plain[0].end_seconds - timings_plain[0].start_seconds
+    punct_first = timings_punct[0].end_seconds - timings_punct[0].start_seconds
+    assert punct_first > plain_first
+
+
+def test_word_timings_function_word_gets_less_time(tmp_path):
+    """'the' (function word) should get less time than 'cat' (same char count, non-function)."""
+    service = make_service(tmp_path)
+    timings = service.compute_word_timings("the cat", 4.0)
+    the_dur = timings[0].end_seconds - timings[0].start_seconds
+    cat_dur = timings[1].end_seconds - timings[1].start_seconds
+    assert the_dur < cat_dur
+
+
+def test_word_timings_preserves_original_words_including_punctuation(tmp_path):
+    """WordTiming.word must be the original token, not the stripped version."""
+    service = make_service(tmp_path)
+    timings = service.compute_word_timings("battery, depletes.", 3.0)
+    assert timings[0].word == "battery,"
+    assert timings[1].word == "depletes."
+
+
+def test_word_timings_words_stored_correctly(tmp_path):
+    service = make_service(tmp_path)
+    timings = service.compute_word_timings("hello world", 2.0)
+    assert timings[0].word == "hello"
+    assert timings[1].word == "world"

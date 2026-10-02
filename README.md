@@ -34,7 +34,7 @@ v2 replaces Streamlit with FastAPI + HTMX, GPU image generation with Pexels stoc
 | 8 | FastAPI routes | ✅ Done |
 | 9 | HTMX frontend — pipeline list + stage panels | ✅ Done |
 | 10 | HTMX frontend — remaining views | ✅ Done |
-| 11 | Karaoke caption timing | Pending |
+| 11 | Karaoke caption timing | ✅ Done |
 | 12 | Platform export presets | Pending |
 
 ---
