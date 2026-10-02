@@ -2,8 +2,13 @@ from pathlib import Path
 
 import pytest
 
-from src.domain.models import Slide, WordTiming
-from src.services.assembly import AssemblyService
+from src.domain.models import Platform, Slide, WordTiming
+from src.services.assembly import (
+    AssemblyService,
+    DEFAULT_PRESET,
+    EXPORT_PRESETS,
+    ExportPreset,
+)
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -258,3 +263,51 @@ def test_word_timings_words_stored_correctly(tmp_path):
     timings = service.compute_word_timings("hello world", 2.0)
     assert timings[0].word == "hello"
     assert timings[1].word == "world"
+
+
+# ── ExportPreset / EXPORT_PRESETS tests ───────────────────────────────────────
+
+
+def test_export_presets_covers_all_platforms():
+    assert set(EXPORT_PRESETS.keys()) == set(Platform)
+
+
+def test_default_preset_is_youtube():
+    assert DEFAULT_PRESET.platform == Platform.youtube
+
+
+def test_youtube_preset_has_8mbps_bitrate():
+    assert EXPORT_PRESETS[Platform.youtube].video_bitrate == "8M"
+
+
+def test_tiktok_preset_has_6mbps_bitrate():
+    assert EXPORT_PRESETS[Platform.tiktok].video_bitrate == "6M"
+
+
+def test_instagram_preset_has_6mbps_bitrate():
+    assert EXPORT_PRESETS[Platform.instagram].video_bitrate == "6M"
+
+
+def test_facebook_preset_has_6mbps_bitrate():
+    assert EXPORT_PRESETS[Platform.facebook].video_bitrate == "6M"
+
+
+def test_all_presets_are_1080x1920():
+    for preset in EXPORT_PRESETS.values():
+        assert preset.width == 1080
+        assert preset.height == 1920
+
+
+def test_all_presets_use_h264_codec():
+    for preset in EXPORT_PRESETS.values():
+        assert preset.codec == "libx264"
+
+
+def test_export_preset_is_frozen():
+    preset = EXPORT_PRESETS[Platform.youtube]
+    with pytest.raises((AttributeError, TypeError)):
+        preset.video_bitrate = "99M"  # type: ignore[misc]
+
+
+def test_default_preset_matches_youtube_preset():
+    assert DEFAULT_PRESET == EXPORT_PRESETS[Platform.youtube]

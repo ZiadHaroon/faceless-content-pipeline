@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from src.domain.models import Slide, WordTiming
+from src.domain.models import Platform, Slide, WordTiming
 
 FPS = 30
 FONT_SIZE = 60
@@ -14,6 +15,27 @@ CAPTION_BOX_BORDER = 10
 
 # How many words to show at once in karaoke mode
 WORDS_PER_GROUP = 3
+
+# ── Platform export presets ───────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class ExportPreset:
+    platform: Platform
+    width: int
+    height: int
+    video_bitrate: str   # ffmpeg -b:v value, e.g. "8M"
+    codec: str           # ffmpeg -c:v value, e.g. "libx264"
+
+
+EXPORT_PRESETS: dict[Platform, ExportPreset] = {
+    Platform.youtube:   ExportPreset(Platform.youtube,   1080, 1920, "8M", "libx264"),
+    Platform.tiktok:    ExportPreset(Platform.tiktok,    1080, 1920, "6M", "libx264"),
+    Platform.instagram: ExportPreset(Platform.instagram, 1080, 1920, "6M", "libx264"),
+    Platform.facebook:  ExportPreset(Platform.facebook,  1080, 1920, "6M", "libx264"),
+}
+
+DEFAULT_PRESET: ExportPreset = EXPORT_PRESETS[Platform.youtube]
 
 # Karaoke timing weights
 _PUNCTUATION_WEIGHT = 1.15      # words ending in , or . get +15% duration
@@ -132,10 +154,13 @@ class AssemblyService:
         output_path: Optional[Path] = None,
         tail: float = 0.1,
         music_path: Optional[Path] = None,
+        platform: Platform = Platform.youtube,
     ) -> Path:
         """
-        Concatenate slide images + audio into an MP4.
-        If any slide has word_timings, captions are burned in via ffmpeg drawtext.
+        Concatenate slide images + audio into an MP4 with the platform export preset.
+
+        The platform preset controls resolution (1080×1920), bitrate, and codec.
+        If any slide has word_timings, captions are burned in the same ffmpeg pass.
         Returns path to the final MP4.
         """
         from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips
@@ -175,28 +200,42 @@ class AssemblyService:
             logger=None,
         )
 
+        preset = EXPORT_PRESETS[platform]
         caption_filter = self.build_caption_filter(slides, tail)
-        if caption_filter:
-            self._burn_captions(raw_path, output_path, caption_filter)
-            raw_path.unlink(missing_ok=True)
-        else:
-            raw_path.rename(output_path)
+        self._encode_final(raw_path, output_path, preset, caption_filter)
+        raw_path.unlink(missing_ok=True)
 
         return output_path
 
     @staticmethod
-    def _burn_captions(input_path: Path, output_path: Path, vf_filter: str) -> None:
-        """Run ffmpeg to burn drawtext captions into the video."""
+    def _encode_final(
+        input_path: Path,
+        output_path: Path,
+        preset: ExportPreset,
+        caption_filter: str = "",
+    ) -> None:
+        """
+        Re-encode with ffmpeg applying the platform preset (scale, bitrate, codec).
+        If ``caption_filter`` is non-empty, it is appended to the video filter chain
+        so captions are burned in the same pass.
+        """
         import subprocess
+
+        vf = f"scale={preset.width}:{preset.height}"
+        if caption_filter:
+            vf = f"{vf},{caption_filter}"
+
         cmd = [
             "ffmpeg", "-y",
             "-i", str(input_path),
-            "-vf", vf_filter,
-            "-codec:a", "copy",
+            "-vf", vf,
+            "-c:v", preset.codec,
+            "-b:v", preset.video_bitrate,
+            "-c:a", "copy",
             str(output_path),
         ]
         result = subprocess.run(cmd, capture_output=True)
         if result.returncode != 0:
             raise RuntimeError(
-                f"ffmpeg caption burn failed:\n{result.stderr.decode()}"
+                f"ffmpeg encode failed:\n{result.stderr.decode()}"
             )
