@@ -1,0 +1,7 @@
+# Minimal deps needed to run src/ and tests/
+# Used by CI. Does not include Streamlit, Kokoro, MoviePy (require system deps).
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+Pillow>=10.0.0
+fastapi>=0.110.0
