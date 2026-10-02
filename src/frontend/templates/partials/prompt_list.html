@@ -1,0 +1,9 @@
+{% if prompts %}
+  {% for prompt in prompts %}
+    {% include "partials/prompt_row.html" %}
+  {% endfor %}
+{% else %}
+  <div class="empty-state">
+    <p class="text-muted">No prompt templates yet.</p>
+  </div>
+{% endif %}

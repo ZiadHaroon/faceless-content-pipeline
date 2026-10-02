@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Batch — Content Pipeline{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Weekly Batch</h1>
+  <span class="text-muted text-sm">{{ total }} video{{ 's' if total != 1 }} total</span>
+</div>
+
+<!-- Stage distribution -->
+{% if total > 0 %}
+<div class="create-form" style="margin-bottom:20px">
+  <div class="panel-section-title" style="margin-bottom:12px">Stage Distribution</div>
+  {% for stage, count in stage_counts.items() %}
+  {% set pct = ((count / total) * 100) | round | int %}
+  <div class="stage-bar-row">
+    <div class="stage-bar-label">
+      <span>
+        <span class="stage-badge stage-{{ stage }}">{{ stage }}</span>
+      </span>
+      <span class="text-muted">{{ count }}</span>
+    </div>
+    <div class="stage-bar-track">
+      <div class="stage-bar-fill stage-{{ stage }}" style="width:{{ pct }}%;background:var(--stage-{{ stage }})"></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Active videos by stage -->
+{% for stage in active_stages %}
+{% set vids = videos_by_stage[stage] %}
+{% if vids %}
+<div style="margin-bottom:20px">
+  <div class="panel-section-title" style="margin-bottom:10px">
+    <span class="stage-badge stage-{{ stage }}">{{ stage }}</span>
+    <span class="text-muted" style="margin-left:6px">{{ vids | length }}</span>
+  </div>
+  {% for video in vids %}
+  <div class="item-row" style="margin-bottom:6px">
+    <span class="item-text">{{ video.title }}</span>
+    <span class="item-meta">{{ video.updated_at.strftime('%b %d') }}</span>
+    <a href="/pipeline?stage={{ stage }}" class="btn btn-ghost btn-sm">Open</a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endfor %}
+
+{% if total == 0 %}
+<div class="empty-state"><p class="text-muted">No active videos.</p></div>
+{% endif %}
+{% endblock %}

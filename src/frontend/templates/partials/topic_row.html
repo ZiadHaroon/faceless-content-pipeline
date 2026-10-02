@@ -1,0 +1,17 @@
+<div id="topic-{{ topic.id }}" class="item-row">
+  <span class="tag-badge tag-{{ topic.tag.value }}">{{ topic.tag.value }}</span>
+  <span class="item-text {% if topic.used %}used{% endif %}">{{ topic.topic }}</span>
+  {% if topic.used %}
+    <span class="item-meta">used</span>
+  {% else %}
+    <button class="btn btn-ghost btn-sm"
+            hx-post="/topics/{{ topic.id }}/mark-used"
+            hx-target="#topic-{{ topic.id }}"
+            hx-swap="outerHTML">Mark Used</button>
+  {% endif %}
+  <button class="delete-btn"
+          hx-delete="/topics/{{ topic.id }}"
+          hx-target="#topic-{{ topic.id }}"
+          hx-swap="outerHTML"
+          hx-confirm="Delete this topic?">✕</button>
+</div>

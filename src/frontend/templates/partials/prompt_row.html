@@ -1,0 +1,13 @@
+<div id="prompt-{{ prompt.id }}" class="prompt-card">
+  <div class="prompt-name">{{ prompt.name }}</div>
+  <div class="prompt-preview">{{ prompt.template }}</div>
+  <div class="prompt-actions">
+    <button class="btn btn-ghost btn-sm copy-btn"
+            data-template="{{ prompt.template | e }}">Copy Template</button>
+    <button class="delete-btn"
+            hx-delete="/prompts/{{ prompt.id }}"
+            hx-target="#prompt-{{ prompt.id }}"
+            hx-swap="outerHTML"
+            hx-confirm="Delete '{{ prompt.name }}'?">✕ Delete</button>
+  </div>
+</div>

@@ -1,0 +1,9 @@
+{% if topics %}
+  {% for topic in topics %}
+    {% include "partials/topic_row.html" %}
+  {% endfor %}
+{% else %}
+  <div class="empty-state">
+    <p class="text-muted">No topics{% if unused_only %} remaining{% endif %}.</p>
+  </div>
+{% endif %}

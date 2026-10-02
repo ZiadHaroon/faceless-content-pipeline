@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Prompts — Content Pipeline{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Prompt Library</h1>
+</div>
+
+<!-- Add prompt -->
+<div class="create-form">
+  <form hx-post="/prompts"
+        hx-target="#prompt-list"
+        hx-swap="afterbegin">
+    <div class="form-group" style="margin-bottom:8px">
+      <label>Name</label>
+      <input type="text" name="name" placeholder="e.g. Default Script Template" required>
+    </div>
+    <div class="form-group" style="margin-bottom:8px">
+      <label>Template — use [TOPIC] as the topic placeholder</label>
+      <textarea name="template" rows="5"
+                placeholder="You are writing a YouTube Shorts script about [TOPIC]..." required></textarea>
+    </div>
+    <button type="submit" class="btn">
+      Save Prompt <span class="htmx-indicator spinner"></span>
+    </button>
+  </form>
+</div>
+
+<div id="prompt-list" style="margin-top:16px">
+  {% include "partials/prompt_list.html" %}
+</div>
+
+<script>
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('copy-btn')) {
+      navigator.clipboard.writeText(e.target.dataset.template)
+        .then(() => {
+          const orig = e.target.textContent;
+          e.target.textContent = 'Copied!';
+          setTimeout(() => e.target.textContent = orig, 1500);
+        });
+    }
+  });
+</script>
+{% endblock %}

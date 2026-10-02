@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Calendar — Content Pipeline{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Publishing Calendar</h1>
+  <span class="text-muted text-sm">{{ videos | length }} published</span>
+</div>
+
+{% if videos %}
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Platforms</th>
+        <th>Date</th>
+        <th>Post URLs</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for video in videos %}
+      <tr>
+        <td style="font-weight:500">{{ video.title }}</td>
+        <td>
+          {% for p in video.platforms %}
+          <span class="tag-badge tag-other">{{ p.value }}</span>
+          {% endfor %}
+        </td>
+        <td class="text-muted">{{ video.publish_date or '—' }}</td>
+        <td>
+          {% for p in video.platforms %}
+            {% set url = video.post_urls.get(p) %}
+            <div style="margin-bottom:4px">
+              <span class="text-muted text-sm">{{ p.value }}:</span>
+              {% if url %}
+                <a href="{{ url }}" target="_blank" class="text-sm">{{ url[:40] }}{% if url|length > 40 %}…{% endif %}</a>
+              {% else %}
+                <span id="post-url-form-{{ video.id }}-{{ p.value }}">
+                  <form style="display:inline-flex;gap:4px"
+                        hx-post="/pipeline/{{ video.id }}/set-post-url"
+                        hx-target="#post-url-form-{{ video.id }}-{{ p.value }}"
+                        hx-swap="outerHTML">
+                    <input type="hidden" name="platform" value="{{ p.value }}">
+                    <input type="text" name="url" placeholder="https://..." style="width:200px;font-size:12px;padding:3px 6px">
+                    <button type="submit" class="btn btn-sm">Save</button>
+                  </form>
+                </span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state"><p class="text-muted">No published videos yet.</p></div>
+{% endif %}
+{% endblock %}

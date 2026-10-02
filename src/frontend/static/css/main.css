@@ -348,6 +348,97 @@ select option { background: var(--surface-2); }
 .alert-info    { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
 .alert-success { background: rgba(34,197,94,0.1);  border: 1px solid rgba(34,197,94,0.3);  color: #86efac; }
 
+/* ── Topic & Prompt rows ────────────────────────────────────────────────── */
+.item-row {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+}
+.item-row + .item-row { margin-top: 6px; }
+.item-text { flex: 1; font-size: 13px; }
+.item-text.used { color: var(--muted); text-decoration: line-through; }
+.item-meta { font-size: 11px; color: var(--muted); }
+
+/* Topic tag badges */
+.tag-badge {
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.tag-AI       { background: rgba(124,106,247,0.15); color: #a78bfa; }
+.tag-device   { background: rgba(59,130,246,0.15);  color: #60a5fa; }
+.tag-security { background: rgba(239,68,68,0.15);   color: #f87171; }
+.tag-internet { background: rgba(16,185,129,0.15);  color: #34d399; }
+.tag-other    { background: rgba(106,105,144,0.15); color: var(--muted); }
+
+/* Prompt card */
+.prompt-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.prompt-card + .prompt-card { margin-top: 8px; }
+.prompt-name { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+.prompt-preview {
+  color: var(--muted);
+  font-size: 12px;
+  font-family: monospace;
+  line-height: 1.5;
+  background: var(--surface-2);
+  border-radius: 4px;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 100px;
+  overflow: hidden;
+}
+.prompt-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* Batch stage bars */
+.stage-bar-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.stage-bar-label { display: flex; justify-content: space-between; font-size: 12px; }
+.stage-bar-track {
+  background: var(--border);
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+}
+.stage-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+/* Calendar table */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 8px 12px;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--surface-2); }
+
+/* Metrics form */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
 /* ── Utility ────────────────────────────────────────────────────────────── */
 .text-muted  { color: var(--muted); }
 .text-sm     { font-size: 12px; }

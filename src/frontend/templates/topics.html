@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Topics — Content Pipeline{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Topic Bank</h1>
+</div>
+
+<!-- Add topic -->
+<div class="create-form">
+  <form class="form-row"
+        hx-post="/topics"
+        hx-target="#topic-list"
+        hx-swap="afterbegin">
+    <div class="form-group" style="flex:3">
+      <label>Topic</label>
+      <input type="text" name="topic" placeholder="e.g. How does Face ID actually work" required>
+    </div>
+    <div class="form-group">
+      <label>Tag</label>
+      <select name="tag">
+        <option value="AI">AI</option>
+        <option value="device">Device</option>
+        <option value="security">Security</option>
+        <option value="internet">Internet</option>
+        <option value="other" selected>Other</option>
+      </select>
+    </div>
+    <button type="submit" class="btn" style="align-self:flex-end">
+      Add Topic <span class="htmx-indicator spinner"></span>
+    </button>
+  </form>
+</div>
+
+<!-- Filter tabs -->
+<div class="stage-filters">
+  <button class="filter-btn {% if not unused_only %}active{% endif %}"
+          hx-get="/topics/list"
+          hx-target="#topic-list"
+          hx-swap="innerHTML">All</button>
+  <button class="filter-btn {% if unused_only %}active{% endif %}"
+          hx-get="/topics/list?unused_only=1"
+          hx-target="#topic-list"
+          hx-swap="innerHTML">Unused</button>
+</div>
+
+<div id="topic-list">
+  {% include "partials/topic_list.html" %}
+</div>
+{% endblock %}

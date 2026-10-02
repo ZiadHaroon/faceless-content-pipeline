@@ -1,11 +1,42 @@
 <div class="panel-section">
-  <div class="alert alert-success">Published successfully.</div>
+  <div class="alert alert-success">Published.</div>
+
   {% if video.platforms %}
-  <p class="text-muted text-sm mt-8">
-    Platforms: {% for p in video.platforms %}{{ p.value | capitalize }}{% if not loop.last %}, {% endif %}{% endfor %}
-  </p>
+  <div style="margin-top:12px">
+    <div class="panel-section-title">Post URLs</div>
+    {% for p in video.platforms %}
+      {% set url = video.post_urls.get(p) %}
+      <div id="post-url-{{ video.id }}-{{ p.value }}" style="margin-bottom:8px">
+        <div class="text-muted text-sm" style="margin-bottom:4px">{{ p.value | capitalize }}</div>
+        {% if url %}
+          <div style="display:flex;gap:8px;align-items:center">
+            <a href="{{ url }}" target="_blank" class="text-sm">{{ url[:50] }}{% if url|length > 50 %}…{% endif %}</a>
+            <span class="text-muted text-sm">·</span>
+            <form style="display:inline"
+                  hx-post="/pipeline/{{ video.id }}/set-post-url"
+                  hx-target="#post-url-{{ video.id }}-{{ p.value }}"
+                  hx-swap="outerHTML">
+              <input type="hidden" name="platform" value="{{ p.value }}">
+              <input type="text" name="url" placeholder="Update URL..." style="font-size:12px;padding:3px 6px;width:180px">
+              <button type="submit" class="btn btn-sm">Update</button>
+            </form>
+          </div>
+        {% else %}
+          <form style="display:flex;gap:6px"
+                hx-post="/pipeline/{{ video.id }}/set-post-url"
+                hx-target="#post-url-{{ video.id }}-{{ p.value }}"
+                hx-swap="outerHTML">
+            <input type="hidden" name="platform" value="{{ p.value }}">
+            <input type="text" name="url" placeholder="https://..." style="font-size:12px;padding:3px 6px;flex:1">
+            <button type="submit" class="btn btn-sm">Save</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
   {% endif %}
+
   {% if video.publish_date %}
-  <p class="text-muted text-sm">Published: {{ video.publish_date }}</p>
+  <p class="text-muted text-sm mt-8">Date: {{ video.publish_date }}</p>
   {% endif %}
 </div>
