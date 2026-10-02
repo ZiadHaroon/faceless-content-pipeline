@@ -1,0 +1,34 @@
+<div class="panel-section">
+  <div class="panel-section-title">Ready to Assemble — {{ video.slides | length }} slides</div>
+  <div class="slides-list">
+    {% for slide in video.slides %}
+    <div class="slide-item">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        {% if slide.image_path %}
+        <img src="/output/images/{{ slide.image_path | replace('\\', '/') | split('/') | last }}"
+             style="width:54px;height:72px;object-fit:cover;border-radius:4px;border:1px solid var(--border);flex-shrink:0">
+        {% else %}
+        <div style="width:54px;height:72px;background:var(--surface-2);border-radius:4px;border:1px solid var(--border);flex-shrink:0"></div>
+        {% endif %}
+        <div>
+          <div class="slide-number">Slide {{ slide.slide_number }}</div>
+          <div class="slide-narration" style="font-size:12px">{{ slide.narration[:100] }}{% if slide.narration|length > 100 %}…{% endif %}</div>
+          <div class="slide-meta">
+            {% if slide.audio_duration_seconds %}<span class="slide-status-ok">🎙 {{ "%.1f"|format(slide.audio_duration_seconds) }}s</span>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="panel-actions">
+  <button class="btn"
+          hx-post="/pipeline/{{ video.id }}/assemble"
+          hx-target="#video-{{ video.id }}"
+          hx-swap="outerHTML">
+    Assemble Video <span class="htmx-indicator spinner"></span>
+  </button>
+  <span class="text-muted text-sm" style="align-self:center">This may take a minute</span>
+</div>

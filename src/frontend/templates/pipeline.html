@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Pipeline — Content Pipeline{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Pipeline</h1>
+</div>
+
+<!-- Create video -->
+<div class="create-form">
+  <form class="form-row"
+        hx-post="/pipeline/videos"
+        hx-target="#video-list"
+        hx-swap="afterbegin">
+    <div class="form-group" style="flex:2">
+      <label>New Video Title</label>
+      <input type="text" name="title" placeholder="e.g. How does Face ID work" required>
+    </div>
+    <button type="submit" class="btn" style="align-self:flex-end">
+      Add Video <span class="htmx-indicator spinner"></span>
+    </button>
+  </form>
+</div>
+
+<!-- Stage filter tabs -->
+<div class="stage-filters">
+  <button class="filter-btn {% if not current_stage %}active{% endif %}"
+          hx-get="/pipeline/videos"
+          hx-target="#video-list"
+          hx-swap="innerHTML"
+          hx-push-url="/pipeline">All</button>
+  {% for stage in stages %}
+  <button class="filter-btn {% if current_stage == stage %}active{% endif %}"
+          hx-get="/pipeline/videos?stage={{ stage }}"
+          hx-target="#video-list"
+          hx-swap="innerHTML"
+          hx-push-url="/pipeline?stage={{ stage }}">{{ stage | capitalize }}</button>
+  {% endfor %}
+</div>
+
+<!-- Video list -->
+<div id="video-list">
+  {% include "partials/video_list.html" %}
+</div>
+{% endblock %}

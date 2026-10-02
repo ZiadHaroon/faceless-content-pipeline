@@ -1,0 +1,11 @@
+<div class="panel-section">
+  <div class="alert alert-success">Published successfully.</div>
+  {% if video.platforms %}
+  <p class="text-muted text-sm mt-8">
+    Platforms: {% for p in video.platforms %}{{ p.value | capitalize }}{% if not loop.last %}, {% endif %}{% endfor %}
+  </p>
+  {% endif %}
+  {% if video.publish_date %}
+  <p class="text-muted text-sm">Published: {{ video.publish_date }}</p>
+  {% endif %}
+</div>

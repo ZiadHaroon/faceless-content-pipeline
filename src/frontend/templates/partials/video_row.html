@@ -1,0 +1,23 @@
+<div id="video-{{ video.id }}" class="video-row">
+  <div class="video-header"
+       hx-get="/pipeline/{{ video.id }}/panel"
+       hx-target="#panel-{{ video.id }}"
+       hx-swap="innerHTML"
+       hx-trigger="click">
+    <span class="video-title">{{ video.title }}</span>
+    <span class="stage-badge stage-{{ video.stage.value }}">{{ video.stage.value }}</span>
+    <span class="video-date">{{ video.updated_at.strftime('%b %d') }}</span>
+    <button class="delete-btn"
+            hx-delete="/pipeline/videos/{{ video.id }}"
+            hx-target="#video-{{ video.id }}"
+            hx-swap="outerHTML"
+            hx-confirm="Delete '{{ video.title }}'?"
+            onclick="event.stopPropagation()">✕</button>
+  </div>
+  <div id="panel-{{ video.id }}" class="video-panel">
+    {% if expanded_panel %}
+      {% set _stage = video.stage.value %}
+      {% include expanded_panel %}
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,11 @@
+{% if videos %}
+<div class="video-list">
+  {% for video in videos %}
+    {% include "partials/video_row.html" %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p class="text-muted">No videos{% if current_stage %} at <strong>{{ current_stage }}</strong> stage{% endif %}.</p>
+</div>
+{% endif %}

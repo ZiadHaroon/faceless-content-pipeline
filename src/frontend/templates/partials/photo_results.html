@@ -1,0 +1,19 @@
+<div>
+  {% if photos %}
+  <div class="photo-grid">
+    {% for photo in photos %}
+    <img class="photo-thumb"
+         src="{{ photo.url_tiny }}"
+         alt="{{ photo.alt }}"
+         title="{{ photo.photographer }}"
+         hx-post="/pipeline/{{ video_id }}/slides/{{ slide_number }}/apply-image-html"
+         hx-vals='{"photo_id": {{ photo.id }}}'
+         hx-target="#video-{{ video_id }}"
+         hx-swap="outerHTML">
+    {% endfor %}
+  </div>
+  <p class="text-muted text-sm mt-8">Click a photo to apply it to this slide.</p>
+  {% else %}
+  <p class="text-muted text-sm">No results for "{{ query }}". Try editing the search_query on the slide.</p>
+  {% endif %}
+</div>

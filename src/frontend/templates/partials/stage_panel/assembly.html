@@ -1,0 +1,13 @@
+<div class="panel-section">
+  <div class="alert alert-success">Video assembled successfully.</div>
+  <p class="text-muted text-sm">Review the video, then approve to move to review stage.</p>
+</div>
+
+<div class="panel-actions">
+  <button class="btn btn-success"
+          hx-post="/pipeline/{{ video.id }}/approve-final"
+          hx-target="#video-{{ video.id }}"
+          hx-swap="outerHTML">
+    Approve Final Cut <span class="htmx-indicator spinner"></span>
+  </button>
+</div>

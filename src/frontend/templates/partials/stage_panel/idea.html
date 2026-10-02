@@ -1,0 +1,62 @@
+{% if video.slides %}
+<!-- Script exists — show preview and approve -->
+<div class="panel-section">
+  <div class="panel-section-title">Generated Script ({{ video.slides | length }} slides)</div>
+  <div class="slides-list">
+    {% for slide in video.slides %}
+    <div class="slide-item">
+      <div class="slide-number">Slide {{ slide.slide_number }}</div>
+      <div class="slide-narration">{{ slide.narration }}</div>
+      <div class="slide-query">🔍 {{ slide.search_query }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<div class="panel-actions">
+  <button class="btn btn-success"
+          hx-post="/pipeline/{{ video.id }}/approve-script"
+          hx-target="#video-{{ video.id }}"
+          hx-swap="outerHTML">
+    Approve Script <span class="htmx-indicator spinner"></span>
+  </button>
+  <span class="text-muted text-sm" style="align-self:center">Approving advances to voiceover stage</span>
+</div>
+{% endif %}
+
+<!-- Generation form (always visible at idea stage) -->
+<div class="panel-section" style="margin-top: {% if video.slides %}16px{% else %}0{% endif %}">
+  <div class="panel-section-title">{% if video.slides %}Regenerate Script{% else %}Generate Script{% endif %}</div>
+  <form hx-post="/pipeline/{{ video.id }}/generate-script"
+        hx-target="#video-{{ video.id }}"
+        hx-swap="outerHTML">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Audience</label>
+        <select name="audience">
+          <option value="general">General (ELI15)</option>
+          <option value="enthusiast">Enthusiast</option>
+          <option value="technical">Technical</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Depth</label>
+        <select name="depth">
+          <option value="what">What (surface facts)</option>
+          <option value="how" selected>How (mechanism)</option>
+          <option value="why">Why (analysis)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Hook Style</label>
+        <select name="hook_style">
+          <option value="stat">Stat</option>
+          <option value="counterintuitive" selected>Counterintuitive</option>
+          <option value="question">Question</option>
+        </select>
+      </div>
+      <button type="submit" class="btn" style="align-self:flex-end">
+        Generate <span class="htmx-indicator spinner"></span>
+      </button>
+    </div>
+  </form>
+</div>

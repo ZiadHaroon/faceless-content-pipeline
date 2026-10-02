@@ -1,0 +1,22 @@
+<div class="panel-section">
+  <div class="panel-section-title">Publish</div>
+  <form hx-post="/pipeline/{{ video.id }}/publish"
+        hx-target="#video-{{ video.id }}"
+        hx-swap="outerHTML">
+    <div class="form-group" style="max-width:300px">
+      <label>Platforms</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 0">
+        {% for platform in platforms %}
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+          <input type="checkbox" name="platforms" value="{{ platform.value }}"
+                 {% if platform in video.platforms %}checked{% endif %}>
+          {{ platform.value | capitalize }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <button type="submit" class="btn mt-8">
+      Mark as Published <span class="htmx-indicator spinner"></span>
+    </button>
+  </form>
+</div>

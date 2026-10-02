@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Content Pipeline{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <span class="nav-brand">Content Pipeline</span>
+    <div class="nav-links">
+      <a href="/pipeline" class="nav-link {% if active_nav == 'pipeline' %}active{% endif %}">Pipeline</a>
+      <a href="/topics"   class="nav-link {% if active_nav == 'topics' %}active{% endif %}">Topics</a>
+      <a href="/prompts"  class="nav-link {% if active_nav == 'prompts' %}active{% endif %}">Prompts</a>
+      <a href="/batch"    class="nav-link {% if active_nav == 'batch' %}active{% endif %}">Batch</a>
+      <a href="/calendar" class="nav-link {% if active_nav == 'calendar' %}active{% endif %}">Calendar</a>
+      <a href="/performance" class="nav-link {% if active_nav == 'performance' %}active{% endif %}">Performance</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+</body>
+</html>

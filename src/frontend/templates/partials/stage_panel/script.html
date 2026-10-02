@@ -1,0 +1,54 @@
+<!-- Approved script -->
+<div class="panel-section">
+  <div class="panel-section-title">Approved Script — {{ video.slides | length }} slides</div>
+  <div class="slides-list">
+    {% for slide in video.slides %}
+    <div class="slide-item">
+      <div class="slide-number">Slide {{ slide.slide_number }}</div>
+      <div class="slide-narration">{{ slide.narration }}</div>
+      <div class="slide-meta">
+        <span>🔍 {{ slide.search_query }}</span>
+        {% if slide.audio_duration_seconds %}
+        <span class="slide-status-ok">🎙 {{ "%.1f"|format(slide.audio_duration_seconds) }}s</span>
+        {% else %}
+        <span class="slide-status-miss">🎙 no audio</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Audio generation -->
+<div class="panel-section">
+  <div class="panel-section-title">Generate Voiceover</div>
+  <form hx-post="/pipeline/{{ video.id }}/generate-audio"
+        hx-target="#video-{{ video.id }}"
+        hx-swap="outerHTML">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Voice</label>
+        <select name="voice">
+          {% for name, id in voices.items() %}
+          <option value="{{ id }}" {% if id == 'af_heart' %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn" style="align-self:flex-end">
+        Generate Audio <span class="htmx-indicator spinner"></span>
+      </button>
+    </div>
+  </form>
+</div>
+
+{% if all_audio_done %}
+<div class="panel-actions">
+  <div class="alert alert-success">All {{ video.slides | length }} slides have audio.</div>
+  <button class="btn btn-success"
+          hx-post="/pipeline/{{ video.id }}/approve-voiceover"
+          hx-target="#video-{{ video.id }}"
+          hx-swap="outerHTML">
+    Approve Voiceover <span class="htmx-indicator spinner"></span>
+  </button>
+</div>
+{% endif %}
