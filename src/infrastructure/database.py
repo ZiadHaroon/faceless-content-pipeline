@@ -63,3 +63,20 @@ class Database:
                     created_at TEXT NOT NULL
                 );
             """)
+            # Add v2 columns to videos if upgrading from v1 schema
+            self._add_column_if_missing(conn, "videos", "slides_json", "TEXT")
+            self._add_column_if_missing(conn, "videos", "script_approved", "INTEGER DEFAULT 0")
+            self._add_column_if_missing(conn, "videos", "voiceover_approved", "INTEGER DEFAULT 0")
+            self._add_column_if_missing(conn, "videos", "final_approved", "INTEGER DEFAULT 0")
+            self._add_column_if_missing(conn, "videos", "platforms", "TEXT DEFAULT '[]'")
+            self._add_column_if_missing(conn, "videos", "publish_date", "TEXT")
+            self._add_column_if_missing(conn, "videos", "post_urls", "TEXT DEFAULT '{}'")
+            self._add_column_if_missing(conn, "videos", "performance", "TEXT DEFAULT '{}'")
+
+    @staticmethod
+    def _add_column_if_missing(
+        conn: sqlite3.Connection, table: str, column: str, definition: str
+    ) -> None:
+        existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+        if column not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
