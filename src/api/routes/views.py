@@ -44,7 +44,6 @@ def _video_ctx(request: Request, video, expanded_panel: str | None = None) -> di
         all(s.image_path is not None for s in video.slides)
     )
     return {
-        "request": request,
         "video": video,
         "expanded_panel": expanded_panel,
         "voices": VOICES,
@@ -74,8 +73,7 @@ def pipeline_page(
 ):
     stage_filter = PipelineStage(stage) if stage else None
     videos = repo.get_all(stage=stage_filter)
-    return templates.TemplateResponse("pipeline.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "pipeline.html", {
         "active_nav": "pipeline",
         "videos": videos,
         "stages": _STAGES,
@@ -94,8 +92,7 @@ def video_list_partial(
 ):
     stage_filter = PipelineStage(stage) if stage else None
     videos = repo.get_all(stage=stage_filter)
-    return templates.TemplateResponse("partials/video_list.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/video_list.html", {
         "videos": videos,
         "current_stage": stage,
     })
@@ -108,7 +105,7 @@ def create_video_html(
     repo: SQLiteVideoRepository = Depends(get_video_repo),
 ):
     video = repo.create(title=title)
-    return templates.TemplateResponse("partials/video_row.html", _video_ctx(request, video))
+    return templates.TemplateResponse(request, "partials/video_row.html", _video_ctx(request, video))
 
 
 @router.delete("/pipeline/videos/{video_id}", response_class=HTMLResponse)
@@ -133,6 +130,7 @@ def stage_panel(
     if video is None:
         return HTMLResponse("<p class='text-muted text-sm'>Video not found.</p>")
     return templates.TemplateResponse(
+        request,
         _panel_template(video),
         _video_ctx(request, video),
     )
@@ -158,6 +156,7 @@ def generate_script_html(
     )
     video = svc.generate_script(video_id, script_req)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -171,6 +170,7 @@ def approve_script_html(
 ):
     video = svc.approve_script(video_id)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -185,6 +185,7 @@ def generate_audio_html(
 ):
     video = svc.generate_audio(video_id, voice=voice or None)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -198,6 +199,7 @@ def approve_voiceover_html(
 ):
     video = svc.approve_voiceover(video_id)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -213,8 +215,7 @@ def search_images_html(
     photos = svc.search_images(video_id, slide_number)
     video = svc._videos.get_by_id(video_id)
     slide = svc._get_slide_or_404(video, slide_number)
-    return templates.TemplateResponse("partials/photo_results.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/photo_results.html", {
         "photos": photos,
         "video_id": video_id,
         "slide_number": slide_number,
@@ -232,6 +233,7 @@ def apply_image_html(
 ):
     video = svc.apply_image(video_id, slide_number, photo_id)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -245,6 +247,7 @@ def generate_images_auto_html(
 ):
     video = svc.generate_images_auto(video_id)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -258,6 +261,7 @@ def advance_to_images_html(
 ):
     video = svc.advance_to_images(video_id)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -271,6 +275,7 @@ def assemble_html(
 ):
     video = svc.assemble_video(video_id)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -284,6 +289,7 @@ def approve_final_html(
 ):
     video = svc.approve_final(video_id)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -299,6 +305,7 @@ def publish_html(
     platform_enums = [Platform(p) for p in platforms] if platforms else None
     video = svc.publish(video_id, platforms=platform_enums)
     return templates.TemplateResponse(
+        request,
         "partials/video_row.html",
         _video_ctx(request, video, expanded_panel=_panel_template(video)),
     )
@@ -321,8 +328,7 @@ def set_post_url_html(
     video = video.model_copy(update={"post_urls": updated_urls})
     repo.update(video)
     url_val = updated_urls[p]
-    return templates.TemplateResponse("partials/post_url_entry.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/post_url_entry.html", {
         "video_id": video_id,
         "platform": p,
         "url": url_val,
@@ -349,8 +355,7 @@ def update_metrics_html(
     video = video.model_copy(update={"performance": updated_perf})
     repo.update(video)
     m = updated_perf[p]
-    return templates.TemplateResponse("partials/metrics_row.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/metrics_row.html", {
         "video_id": video_id,
         "platform": p,
         "m": m,
@@ -366,8 +371,7 @@ def topics_page(
     repo: SQLiteTopicRepository = Depends(get_topic_repo),
 ):
     topics = repo.get_all()
-    return templates.TemplateResponse("topics.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "topics.html", {
         "active_nav": "topics",
         "topics": topics,
         "tags": list(TopicTag),
@@ -381,8 +385,7 @@ def topic_list_partial(
     repo: SQLiteTopicRepository = Depends(get_topic_repo),
 ):
     topics = repo.get_all(unused_only=unused_only)
-    return templates.TemplateResponse("partials/topic_list.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/topic_list.html", {
         "topics": topics,
     })
 
@@ -395,8 +398,7 @@ def create_topic_html(
     repo: SQLiteTopicRepository = Depends(get_topic_repo),
 ):
     new_topic = repo.create(topic=topic, tag=TopicTag(tag))
-    return templates.TemplateResponse("partials/topic_row.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/topic_row.html", {
         "topic": new_topic,
     })
 
@@ -409,8 +411,7 @@ def mark_topic_used_html(
 ):
     repo.mark_used(topic_id)
     topic = repo.get_by_id(topic_id)
-    return templates.TemplateResponse("partials/topic_row.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/topic_row.html", {
         "topic": topic,
     })
 
@@ -433,8 +434,7 @@ def prompts_page(
     repo: SQLitePromptRepository = Depends(get_prompt_repo),
 ):
     prompts = repo.get_all()
-    return templates.TemplateResponse("prompts.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "prompts.html", {
         "active_nav": "prompts",
         "prompts": prompts,
     })
@@ -446,8 +446,7 @@ def prompt_list_partial(
     repo: SQLitePromptRepository = Depends(get_prompt_repo),
 ):
     prompts = repo.get_all()
-    return templates.TemplateResponse("partials/prompt_list.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/prompt_list.html", {
         "prompts": prompts,
     })
 
@@ -460,8 +459,7 @@ def create_prompt_html(
     repo: SQLitePromptRepository = Depends(get_prompt_repo),
 ):
     prompt = repo.create(name=name, template=template)
-    return templates.TemplateResponse("partials/prompt_row.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "partials/prompt_row.html", {
         "prompt": prompt,
     })
 
@@ -491,8 +489,7 @@ def batch_page(
             videos_by_stage[v.stage.value].append(v)
     stage_counts = {s: len(videos_by_stage[s.value]) for s in active_stages}
     total = sum(stage_counts.values())
-    return templates.TemplateResponse("batch.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "batch.html", {
         "active_nav": "batch",
         "videos_by_stage": videos_by_stage,
         "active_stages": [s.value for s in active_stages],
@@ -507,8 +504,7 @@ def calendar_page(
     repo: SQLiteVideoRepository = Depends(get_video_repo),
 ):
     videos = repo.get_all(stage=PipelineStage.published)
-    return templates.TemplateResponse("calendar.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "calendar.html", {
         "active_nav": "calendar",
         "videos": videos,
     })
@@ -520,8 +516,7 @@ def performance_page(
     repo: SQLiteVideoRepository = Depends(get_video_repo),
 ):
     videos = repo.get_all(stage=PipelineStage.published)
-    return templates.TemplateResponse("performance.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "performance.html", {
         "active_nav": "performance",
         "videos": videos,
     })
